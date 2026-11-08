@@ -40,14 +40,15 @@ app.get("/admin-login", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "admin-login.html"));
 });
 
-// ---- Start Server / Vercel Export ----
-const PORT = process.env.PORT || 5000;
+// ---- Favicon handler to prevent 404 noise in browser logs ----
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Only listen locally; export app for Vercel serverless deployment
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT} (Using Local NeDB Database)`);
-    });
-}
+// ---- Start Server ----
+const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Binds to all interfaces for cloud hosts (Railway/Render)
+
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 Tradexora server listening on ${HOST}:${PORT}`);
+});
 
 module.exports = app;
