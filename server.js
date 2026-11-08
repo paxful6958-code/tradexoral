@@ -40,8 +40,14 @@ app.get("/admin-login", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "admin-login.html"));
 });
 
-// ---- Start Server ----
+// ---- Start Server / Vercel Export ----
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT} (Using Local NeDB Database)`);
-});
+
+// Only listen locally; export app for Vercel serverless deployment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT} (Using Local NeDB Database)`);
+    });
+}
+
+module.exports = app;
