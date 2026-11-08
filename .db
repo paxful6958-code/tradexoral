@@ -1,0 +1,11 @@
+const path = require('path');
+const Datastore = require('nedb');
+
+// Use /tmp directory on Vercel for writable database storage, local folder otherwise
+const dbPath = process.env.VERCEL 
+    ? path.join('/tmp', 'data.db') 
+    : path.join(__dirname, '../data.db'); // Adjust relative path to your local db file
+
+const db = new Datastore({ filename: dbPath, autoload: true });
+
+module.exports = db;
