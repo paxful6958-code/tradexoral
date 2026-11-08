@@ -463,6 +463,19 @@
 
         let pendingUserData = null; // Stores pending registration data while waiting for OTP verification
 
+        /* =====================================================================
+           CORRECT FETCH PATTERN — works on both Localhost and Vercel
+           production. Relative URLs resolve against the current origin,
+           so no hardcoded domains are needed.
+           ===================================================================== */
+        async function authFetch(url, payload) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
         // Modal Controls
         function openModal(id) {
             const el = document.getElementById(id);
@@ -614,16 +627,10 @@
 
             try {
                 // Send verified user data to backend database so it appears in Admin panel
-                const response = await fetch('/api/auth/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: pendingUserData.fullName,
-                        email: pendingUserData.email,
-                        password: pendingUserData.password
-                    })
+                const response = await authFetch('/api/auth/signup', {
+                    username: pendingUserData.fullName,
+                    email: pendingUserData.email,
+                    password: pendingUserData.password
                 });
 
                 const data = await response.json();
@@ -677,22 +684,19 @@
             loginBtn.textContent = "Logging in...";
 
             try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password
-                    })
+                // Correct way for both Localhost and Vercel production
+                const response = await authFetch('/api/auth/login', {
+                    email,
+                    password
                 });
 
                 const data = await response.json();
 
-                if (data.success) {
+                if (data.success && data.user) {
+                    // Store the full user object. Every page resolves the id
+                    // via user.id || user._id from this key — no separate
+                    // 'userId' entry needed.
                     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(data.user));
-                    localStorage.setItem('userId', data.user.id);
                     window.location.href = "Dashboard/index.html";
                 } else {
                     errBox.textContent = data.message || "Invalid email address or password.";
@@ -712,7 +716,6 @@
         // Logout Handler
         function handleLogout() {
             localStorage.removeItem(CURRENT_USER_KEY);
-            localStorage.removeItem('userId');
             updateAuthState();
             window.location.href = "index.html";
         }
